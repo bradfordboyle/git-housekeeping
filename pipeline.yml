@@ -1,0 +1,54 @@
+resources:
+- name: git-housekeeping
+  type: git
+  source:
+    uri: https://github.com/bradfordboyle/git-housekeeping.git
+
+- name: apache-geode
+  type: git
+  source:
+    uri: https://github.com/apache/geode.git
+
+jobs:
+- name: check-apache-geode
+  plan:
+  - aggregate:
+    - get: git-housekeeping
+    - get: apache-geode
+  - task: build-git-housekeeping
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: rust
+          tag: 1.29-stretch
+      run:
+        path: cargo
+        args:
+        - build
+        - --release
+        - --manifest-path
+        - git-housekeeping/Cargo.toml
+        - --target-dir
+        - git-housekeeping-target
+      inputs:
+      - name: git-housekeeping
+      outputs:
+      - name: git-housekeeping-target
+  - task: check-apache-geode
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: rust
+          tag: 1.29-stretch
+      run:
+        path: git-housekeeping-target/release/git-housekeeping
+        args:
+        - branches
+        - apache-geode
+      inputs:
+      - name: git-housekeeping-target
+      - name: apache-geode
