@@ -2,6 +2,7 @@ extern crate chrono;
 extern crate csv;
 extern crate failure;
 extern crate git2;
+extern crate git_housekeeping;
 #[macro_use]
 extern crate structopt;
 
@@ -11,11 +12,28 @@ use chrono::{TimeZone, UTC};
 use git2::{BranchType, Repository};
 use structopt::StructOpt;
 
+use git_housekeeping::query;
+
 #[derive(Debug, StructOpt)]
 #[structopt(name = "git-housekeeping", about = "keep your repos tidy")]
 enum Opt {
     #[structopt(name = "branches")]
     Branches { path: String },
+    #[structopt(name = "branch-query")]
+    BranchQuery { owner: String, repo: String },
+}
+
+fn branch_query(owner: &str, name: &str) -> Result<(), failure::Error> {
+    let branch_vec = query::perform_my_query(owner, name)?;
+    let mut wtr = csv::Writer::from_writer(io::stdout());
+
+    for b in branch_vec {
+        wtr.serialize(b)?;
+    }
+
+    wtr.flush()?;
+
+    Ok(())
 }
 
 fn branches(repo_name: &str) -> Result<(), failure::Error> {
@@ -55,5 +73,6 @@ fn main() -> Result<(), failure::Error> {
 
     match opt {
         Opt::Branches { path } => branches(&path),
+        Opt::BranchQuery { owner, repo } => branch_query(&owner, &repo),
     }
 }
