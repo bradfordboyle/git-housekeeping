@@ -20,11 +20,16 @@ enum Opt {
     #[structopt(name = "branches")]
     Branches { path: String },
     #[structopt(name = "branch-query")]
-    BranchQuery { owner: String, repo: String },
+    BranchQuery {
+        owner: String,
+        repo: String,
+        #[structopt(long = "fetch-size", default_value = "10")]
+        fetch_size: i64,
+    },
 }
 
-fn branch_query(owner: &str, name: &str) -> Result<(), failure::Error> {
-    let branch_vec = query::perform_my_query(owner, name)?;
+fn branch_query(owner: &str, name: &str, fetch_size: i64) -> Result<(), failure::Error> {
+    let branch_vec = query::perform_my_query(owner, name, fetch_size)?;
     let mut wtr = csv::Writer::from_writer(io::stdout());
 
     for b in branch_vec {
@@ -73,6 +78,10 @@ fn main() -> Result<(), failure::Error> {
 
     match opt {
         Opt::Branches { path } => branches(&path),
-        Opt::BranchQuery { owner, repo } => branch_query(&owner, &repo),
+        Opt::BranchQuery {
+            owner,
+            repo,
+            fetch_size,
+        } => branch_query(&owner, &repo, fetch_size),
     }
 }

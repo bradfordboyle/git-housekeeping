@@ -45,12 +45,16 @@ impl BranchInfo {
     }
 }
 
-pub fn perform_my_query(owner: &str, name: &str) -> Result<Vec<BranchInfo>, failure::Error> {
+pub fn perform_my_query(
+    owner: &str,
+    name: &str,
+    fetch_size: i64,
+) -> Result<Vec<BranchInfo>, failure::Error> {
     let mut variables = my_query::Variables {
         owner: owner.to_string(),
         name: name.to_string(),
         cursor: None,
-        fetch_size: Some(10),
+        fetch_size: Some(fetch_size),
     };
 
     let mut branch_vec = Vec::new();
