@@ -15,27 +15,6 @@ jobs:
   - aggregate:
     - get: git-housekeeping
     - get: apache-geode
-  - task: build-git-housekeeping
-    config:
-      platform: linux
-      image_resource:
-        type: docker-image
-        source:
-          repository: rust
-          tag: 1.29-stretch
-      run:
-        path: cargo
-        args:
-        - build
-        - --release
-        - --manifest-path
-        - git-housekeeping/Cargo.toml
-        - --target-dir
-        - git-housekeeping-target
-      inputs:
-      - name: git-housekeeping
-      outputs:
-      - name: git-housekeeping-target
   - task: check-apache-geode
     config:
       platform: linux
@@ -45,10 +24,15 @@ jobs:
           repository: rust
           tag: 1.29-stretch
       run:
-        path: git-housekeeping-target/release/git-housekeeping
+        path: sh
         args:
-        - branches
-        - apache-geode
+        - -ec
+        - |
+          cargo --quiet install xsv
+          cd apache-geode
+          git config remote.origin.fetch +refs/heads/*:refs/remotes/origin/*
+          git fetch --quiet
+          git for-each-ref refs/remotes/origin --format='"%(committerdate:iso8601)","%(authorname)","%(refname:short)"' | xsv sort -n -s1 | xsv table
+
       inputs:
-      - name: git-housekeeping-target
       - name: apache-geode
