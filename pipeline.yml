@@ -3,6 +3,13 @@ resources:
   type: git
   source:
     uri: https://github.com/bradfordboyle/git-housekeeping.git
+- name: timer
+  type: time
+  source:
+    start: 8:00 AM
+    stop: 6:00 PM
+    interval: 5m
+    location: America/Los_Angeles
 
 - name: apache-geode
   type: git
@@ -13,6 +20,8 @@ jobs:
 - name: check-apache-geode
   plan:
   - aggregate:
+    - get: timer
+      trigger: true
     - get: git-housekeeping
     - get: apache-geode
   - task: check-apache-geode
